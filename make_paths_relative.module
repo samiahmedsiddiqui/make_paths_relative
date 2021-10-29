@@ -1,0 +1,185 @@
+<?php
+
+/**
+ * @file
+ * Enables Drupal to converts the URL(Links) to relative instead of absolute.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function make_paths_relative_menu() {
+
+  $items = array();
+
+  $items['admin/config/system/make-paths-relative'] = array(
+    'title'             => 'Make Paths Relative Settings',
+    'description'       => 'Allow to make the Scripts, Styles, Images, hrefs etc to be relative.',
+    'page callback'     => 'drupal_get_form',
+    'page arguments'    => array('make_paths_relative_settings_form'),
+    'access arguments'  => array('make_paths_relative_settings'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function make_paths_relative_permission() {
+
+  $permissions['make_paths_relative_settings'] = array(
+    'title'           => t('Make Paths Relative'),
+    'restrict access' => TRUE,
+    'description'     => t('Users who have this permission can change URLs settings from absolute to relative or relative to absolute.'),
+  );
+
+  return $permissions;
+}
+
+/**
+ * Implements hook_help().
+ */
+function make_paths_relative_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#make_paths_relative':
+
+      $filepath = dirname(__FILE__) . '/README.md';
+      if (file_exists($filepath)) {
+        $readme = file_get_contents($filepath);
+      }
+      else {
+        $filepath = dirname(__FILE__) . '/README.txt';
+        if (file_exists($filepath)) {
+          $readme = file_get_contents($filepath);
+        }
+      }
+      if (!isset($readme)) {
+        return NULL;
+      }
+      if (module_exists('markdown')) {
+        $filters = module_invoke('markdown', 'filter_info');
+        $info = $filters['filter_markdown'];
+
+        if (function_exists($info['process callback'])) {
+          $output = $info['process callback']($readme, NULL);
+        }
+        else {
+          $output = '<pre>' . $readme . '</pre>';
+        }
+      }
+      else {
+        $output = '<pre>' . $readme . '</pre>';
+      }
+
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_form().
+ */
+function make_paths_relative_settings_form($form, &$form_state) {
+  $make_paths_relative_settings = variable_get('make_paths_relative', '');
+
+  $page_scripts = 0;
+  $page_styles = 0;
+  $page_body = 0;
+  if ($make_paths_relative_settings != '') {
+    $make_paths_relative_settings = unserialize($make_paths_relative_settings);
+
+    if (isset($make_paths_relative_settings['scripts']) && $make_paths_relative_settings['scripts'] == 1) {
+      $page_scripts = 1;
+    }
+
+    if (isset($make_paths_relative_settings['styles']) && $make_paths_relative_settings['styles'] == 1) {
+      $page_styles = 1;
+    }
+
+    if (isset($make_paths_relative_settings['body']) && $make_paths_relative_settings['body'] == 1) {
+      $page_body = 1;
+    }
+  }
+
+  $form = array();
+
+  $form['scripts'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Scripts (JS Files)'),
+    '#default_value' => $page_scripts,
+  );
+
+  $form['styles'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Styles (CSS Files)'),
+    '#default_value' => $page_styles,
+  );
+
+  $form['body'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Body (href, image src etc.)'),
+    '#default_value' => $page_body,
+  );
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_form_submit().
+ *
+ * Serialize the user's settings and save it to the Drupal's Variable Table.
+ */
+function make_paths_relative_settings_form_submit($form, &$form_state) {
+  $make_relatives['scripts'] = $form_state['values']['scripts'];
+  $make_relatives['styles'] = $form_state['values']['styles'];
+  $make_relatives['body'] = $form_state['values']['body'];
+
+  $make_relatives = serialize($make_relatives);
+  variable_set('make_paths_relative', $make_relatives);
+
+  drupal_set_message(t('Your Settings have been saved.'), 'status');
+}
+
+/**
+ * Implements hook_process_html().
+ *
+ * This hook replaces the base url using user's respective settings.
+ */
+function make_paths_relative_process_html(&$variables) {
+  $make_paths_relative = variable_get('make_paths_relative', '');
+  if ($make_paths_relative != '') {
+    global $base_url;
+
+    $replace_protocols = array(
+      'http://',
+      'https://',
+      '//',
+    );
+    $host_name = str_replace($replace_protocols, '', $base_url);
+
+    $replace_base_url = array(
+      'http://' . $host_name,
+      'https://' . $host_name,
+      '//' . $host_name,
+    );
+
+    $make_paths_relative = unserialize($make_paths_relative);
+
+    if (isset($make_paths_relative['scripts']) && $make_paths_relative['scripts'] == 1) {
+      $variables['scripts'] = str_replace($replace_base_url, '', $variables['scripts']);
+    }
+
+    if (isset($make_paths_relative['styles']) && $make_paths_relative['styles'] == 1) {
+      $variables['styles'] = str_replace($replace_base_url, '', $variables['styles']);
+    }
+
+    if (isset($make_paths_relative['body']) && $make_paths_relative['body'] == 1) {
+      $variables['page'] = str_replace($replace_base_url, '', $variables['page']);
+    }
+  }
+}
