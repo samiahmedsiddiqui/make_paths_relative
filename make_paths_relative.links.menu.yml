@@ -1,0 +1,5 @@
+make_paths_relative.admin:
+  title: 'Make Paths Relative Settings'
+  description: 'Allow to make the Scripts, Styles, Images, hrefs etc to be relative.'
+  parent: system.admin_config_system
+  route_name: make_paths_relative.admin_settings

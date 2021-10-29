@@ -1,0 +1,8 @@
+name: Make Paths Relative
+description: This module can make(convert) the paths(URLs) to relative instead of absolute. This module is useful to using the relative URLs.
+package: Make Paths Relative
+
+type: module
+core: 8.x
+
+configure: make_paths_relative.admin_settings

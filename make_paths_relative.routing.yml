@@ -1,0 +1,7 @@
+make_paths_relative.admin_settings:
+  path: '/admin/config/system/make-paths-relative'
+  defaults:
+    _form: '\Drupal\make_paths_relative\Form\MakePathsRelativeForm'
+    _title: 'Make Paths Relative Settings'    
+  requirements:
+    _permission: 'administer site configuration'

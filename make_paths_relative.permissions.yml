@@ -1,0 +1,4 @@
+make_paths_relative_settings:
+  title: 'Make Paths Relative'
+  description: 'Users who have this permission can change URLs settings from absolute to relative or relative to absolute.'
+  restrict access: TRUE

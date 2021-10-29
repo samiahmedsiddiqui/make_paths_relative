@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Enables Drupal to converts the URL(Links) to relative instead of absolute.
+ */
+
+/**
+ * Implements hook_process_html().
+ *
+ * This hook replaces the base url using user's respective settings.
+
+function make_paths_relative_preprocess_page(&$variables) {
+print '<pre>';print_r($variables['page']);print'</pre>';exit;
+  $make_paths_relative = $this->config('make_paths_relative.settings')->get('make_paths_relative');
+
+  if ($make_paths_relative != '') {
+    global $base_url;
+
+    $replace_protocols = array(
+      'http://',
+      'https://',
+      '//',
+    );
+    $host_name = str_replace($replace_protocols, '', $base_url);
+
+    $replace_base_url = array(
+      'http://' . $host_name,
+      'https://' . $host_name,
+      '//' . $host_name,
+    );
+
+    $make_paths_relative = unserialize($make_paths_relative);
+
+    if (isset($make_paths_relative['scripts']) && $make_paths_relative['scripts'] == 1) {
+      $variables['scripts'] = str_replace($replace_base_url, '', $variables['scripts']);
+    }
+
+    if (isset($make_paths_relative['styles']) && $make_paths_relative['styles'] == 1) {
+      $variables['styles'] = str_replace($replace_base_url, '', $variables['styles']);
+    }
+
+    if (isset($make_paths_relative['body']) && $make_paths_relative['body'] == 1) {
+      $variables['page'] = str_replace($replace_base_url, '', $variables['page']);
+    }
+  }
+
+}
+*/
